@@ -1,9 +1,9 @@
 #!/usr/bin/env groovy
 /*
  * Jenkinsfile
- * JenkinsfileTemplate
+ * JenkinsPhatblatServices
  *
- *
+ * Updates jenkins formula in phatblat/homebrew-services
  */
 
 import jenkins.model.*
@@ -15,9 +15,6 @@ properties([
     // Don't trigger this job when changes are found from branch indexing.
     //overrideIndexTriggers(false),
     disableConcurrentBuilds(),
-    pipelineTriggers([
-        cron('H 1 * * *')
-    ]),
     buildDiscarder(logRotator(numToKeepStr: '100')),
 ])
 
@@ -29,10 +26,11 @@ try {
         withEnv(['LANG=en_US.UTF-8']) {
             node {
                 stage("🛒 Checkout") {
-                    checkout scm
+                    git url: "git@github.com:phatblat/homebrew-services.git"
                 }
-                stage("📦 Bundler") {
-                    // https://jenkins.io/doc/pipeline/steps/workflow-durable-task-step/#sh-shell-script
+                stage("⚖️ Compare Version") {
+                    File formula = new File("Formula/pbjenkins.rb")
+
                     sh(
                         script: "gem list bundler",
                         label: "💎 List gems"
@@ -72,7 +70,7 @@ try {
                     return
                 }
 
-                stage("❓ Conditional Stage") {
+                stage("🍼 Update Formula") {
                 }
             }
         }
