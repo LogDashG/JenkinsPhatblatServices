@@ -12,45 +12,75 @@ def MAIL_TO = JenkinsLocationConfiguration.get().getAdminAddress()
 echo "MAIL_TO: $MAIL_TO"
 
 properties([
+    parameters([
+        string(
+            name: 'newVersion',
+            defaultValue: null,
+            description: 'New version of Jenkins.'
+        ),
+        string(
+            name: 'fileHash',
+            defaultValue: null,
+            description: 'SHA-256 hash of war file.'
+        )
+    ])
     // Don't trigger this job when changes are found from branch indexing.
     //overrideIndexTriggers(false),
     disableConcurrentBuilds(),
     buildDiscarder(logRotator(numToKeepStr: '100')),
 ])
 
+// Parmaeters
+String newVersion = params.newVersion
+String fileHash = params.fileHash
+
 // Global variables
-String output
+String fileName = "Formula/pbjenkins.rb"
+String fileContents
 
 try {
     timeout(time: 1, unit: 'HOURS') {
         withEnv(['LANG=en_US.UTF-8']) {
-            node {
+            node
+                stage("✔️ Parameters") {
+                    echo "newVersion: $newVersion"
+                    echo "fileHash: $fileHash"
+
+                    if (newVersion == null || fileHash == null) {
+                        echo "Required parameters are missing"
+                        currentBuild.rawBuild.@result = hudson.model.Result.FAILURE
+                        return
+                    }
+                }
                 stage("🛒 Checkout") {
                     git url: "git@github.com:phatblat/homebrew-services.git"
                 }
                 stage("⚖️ Compare Version") {
-                    File formula = new File("Formula/pbjenkins.rb")
+                    // https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#readfile-read-file-from-workspace
+                    String oldContents = readFile fileName
+                    oldContents.eachLine { line, count ->
+                        println "line $count: $line"
 
-                    sh(
-                        script: "gem list bundler",
-                        label: "💎 List gems"
-                    )
+                        // Version in url
+                        if (line.startsWith("  url")) {
+                            // Find version
+                            // url "http://mirrors.jenkins.io/war/2.167/jenkins.war"
+                            if (line.contains(newVersion)) {
+                                echo "Version $newVersion already in build, aborting."
+                                currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
+                                return
+                            }
 
-                    // Capture stdout
-                    output = sh(
-                        script: "which bundle",
-                        label: "❓ Which",
-                        returnStdout: true
-                    ).trim()
-
-                    // Suppress build failure
-                    Integer status = sh(
-                        script: """
-                            false
-                        """,
-                        label: "✔️ Check",
-                        returnStatus: true
-                    )
+                            fileContents += "  url \"http://mirrors.jenkins.io/war/$newVersion/jenkins.war\"\n"
+                        }
+                        else if (line.startsWith("  sha256")) {
+                            // sha256 "5218a0db16e5815eec7f286006b677d935bc4be7a3ea9fef8aba087041c8a37e"
+                            fileContents += "  sha256 \"$filehash\"\n"
+                        }
+                        else {
+                            fileContents += line + '\n'
+                        }
+                    }
 
                     if (status != 0) {
                         echo "Aborting build. 😞"
@@ -59,18 +89,14 @@ try {
                 }
 
                 echo "currentBuild.result: ${currentBuild.result}"
-
-                // build.@result = hudson.model.Result.SUCCESS
-                // build.@result = hudson.model.Result.NOT_BUILT
-                // build.@result = hudson.model.Result.UNSTABLE
-                // build.@result = hudson.model.Result.FAILURE
-                // build.@result = hudson.model.Result.ABORTED
-
                 if (currentBuild.result && currentBuild.result != 'SUCCESS') {
                     return
                 }
 
                 stage("🍼 Update Formula") {
+                    // https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#writefile-write-file-to-workspace
+                    writeFile file: fileName, text: fileContents
+                    archiveArtifacts fileName
                 }
             }
         }
