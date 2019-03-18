@@ -21,6 +21,9 @@ properties([
     buildDiscarder(logRotator(numToKeepStr: '100')),
 ])
 
+// Global variables
+String output
+
 try {
     timeout(time: 1, unit: 'HOURS') {
         withEnv(['LANG=en_US.UTF-8']) {
@@ -34,14 +37,42 @@ try {
                         script: "gem list bundler",
                         label: "💎 List gems"
                     )
-                    sh(
+
+                    // Capture stdout
+                    output = sh(
                         script: "which bundle",
-                        label: "❓ Which"
+                        label: "❓ Which",
+                        returnStdout: true
+                    ).trim()
+
+                    // Suppress build failure
+                    Integer status = sh(
+                        script: """
+                            false
+                        """,
+                        label: "✔️ Check",
+                        returnStatus: true
                     )
-                    sh(
-                        script: "bundle --version",
-                        label: "🏃🏻‍♂️ Run bundler"
-                    )
+
+                    if (status != 0) {
+                        echo "Aborting build. 😞"
+                        currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
+                    }
+                }
+
+                echo "currentBuild.result: ${currentBuild.result}"
+
+                // build.@result = hudson.model.Result.SUCCESS
+                // build.@result = hudson.model.Result.NOT_BUILT
+                // build.@result = hudson.model.Result.UNSTABLE
+                // build.@result = hudson.model.Result.FAILURE
+                // build.@result = hudson.model.Result.ABORTED
+
+                if (currentBuild.result && currentBuild.result != 'SUCCESS') {
+                    return
+                }
+
+                stage("❓ Conditional Stage") {
                 }
             }
         }
@@ -57,9 +88,9 @@ catch (Exception ex) {
                 |
                 |${env.BUILD_URL}
                 |
-                |${ex.message}
+                |${ex}
                 |
-                |${env.BUILD_URL}/console
+                |${env.BUILD_URL}console
                 |""".stripMargin()
 
     mail to: MAIL_TO,
