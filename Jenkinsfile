@@ -12,6 +12,10 @@ def MAIL_TO = JenkinsLocationConfiguration.get().getAdminAddress()
 echo "MAIL_TO: $MAIL_TO"
 
 properties([
+    buildDiscarder(logRotator(numToKeepStr: '100')),
+    disableConcurrentBuilds(),
+    // Don't trigger this job when changes are found from branch indexing.
+    //overrideIndexTriggers(false),
     parameters([
         string(
             name: 'newVersion',
@@ -22,12 +26,8 @@ properties([
             name: 'fileHash',
             defaultValue: null,
             description: 'SHA-256 hash of war file.'
-        )
+        ),
     ]),
-    // Don't trigger this job when changes are found from branch indexing.
-    //overrideIndexTriggers(false),
-    disableConcurrentBuilds(),
-    buildDiscarder(logRotator(numToKeepStr: '100'))
 ])
 
 // Parmaeters
