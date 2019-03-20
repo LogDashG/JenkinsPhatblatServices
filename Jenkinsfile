@@ -23,11 +23,11 @@ properties([
             defaultValue: null,
             description: 'SHA-256 hash of war file.'
         )
-    ])
+    ]),
     // Don't trigger this job when changes are found from branch indexing.
     //overrideIndexTriggers(false),
     disableConcurrentBuilds(),
-    buildDiscarder(logRotator(numToKeepStr: '100')),
+    buildDiscarder(logRotator(numToKeepStr: '100'))
 ])
 
 // Parmaeters
