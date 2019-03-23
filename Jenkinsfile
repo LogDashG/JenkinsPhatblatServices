@@ -62,7 +62,7 @@ try {
                     String oldContents = readFile fileName
                     echo oldContents
 
-                    String lines = oldContents.split('\n')
+                    def lines = oldContents.split('\n')
 
                     lines.eachWithIndex { line, index ->
                         echo "line $index: $line"
