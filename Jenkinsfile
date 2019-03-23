@@ -41,7 +41,7 @@ String fileContents
 try {
     timeout(time: 1, unit: 'HOURS') {
         withEnv(['LANG=en_US.UTF-8']) {
-            node
+            node {
                 stage("✔️ Parameters") {
                     echo "newVersion: $newVersion"
                     echo "fileHash: $fileHash"
