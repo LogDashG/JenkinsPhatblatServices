@@ -85,8 +85,8 @@ try {
                         else {
                             fileContents += line + '\n'
                         }
+                        count++
                     }
-                    count++
                 }
 
                 echo "currentBuild.result: ${currentBuild.result}"
