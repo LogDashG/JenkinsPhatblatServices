@@ -61,7 +61,8 @@ try {
                     echo oldContents
 
                     def count = 0
-                    oldContents.eachLine {
+                    def lines = oldContents.split('\n')
+                    lines.each {
                         def line = it
                         echo "line $count: $line"
 
