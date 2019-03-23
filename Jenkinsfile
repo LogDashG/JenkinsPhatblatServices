@@ -60,11 +60,9 @@ try {
                     String oldContents = readFile fileName
                     echo oldContents
 
-                    def count = 0
                     def lines = oldContents.split('\n')
-                    lines.each {
-                        def line = it
-                        echo "line $count: $line"
+                    lines.eachWithIndex { line, index ->
+                        echo "line $index: $line"
 
                         // Version in url
                         if (line.startsWith("  url")) {
@@ -85,7 +83,6 @@ try {
                         else {
                             fileContents += line + '\n'
                         }
-                        count++
                     }
                 }
 
