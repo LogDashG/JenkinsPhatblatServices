@@ -3,7 +3,7 @@
  * Jenkinsfile
  * JenkinsPhatblatServices
  *
- * Updates jenkins formula in phatblat/homebrew-services
+ * Updates pbjenkins formula in phatblat/homebrew-services.
  */
 
 import jenkins.model.*
@@ -47,9 +47,10 @@ try {
                     echo "fileHash: $fileHash"
 
                     if (newVersion == null || fileHash == null) {
-                        echo "Required parameters are missing"
-                        currentBuild.rawBuild.@result = hudson.model.Result.FAILURE
-                        return
+                        String message = "Required parameters are missing"
+                        echo message
+                        currentBuild.build = "FAILURE"
+                        throw new Exception(message)
                     }
                 }
                 stage("🛒 Checkout") {
@@ -69,9 +70,10 @@ try {
                             // Find version
                             // url "http://mirrors.jenkins.io/war/2.167/jenkins.war"
                             if (line.contains(newVersion)) {
-                                echo "Version $newVersion already in build, aborting."
-                                currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
-                                return
+                                String message = "Version $newVersion is already in formula."
+                                echo message
+                                currentBuild.build = "ABORTED"
+                                throw new Exception(message)
                             }
 
                             fileContents += "  url \"http://mirrors.jenkins.io/war/$newVersion/jenkins.war\"\n"
