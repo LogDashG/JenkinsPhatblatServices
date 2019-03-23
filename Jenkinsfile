@@ -60,7 +60,9 @@ try {
                     String oldContents = readFile fileName
                     echo oldContents
 
-                    oldContents.eachLine { line, count ->
+                    def count = 0
+                    oldContents.eachLine {
+                        def line = it
                         echo "line $count: $line"
 
                         // Version in url
@@ -83,6 +85,7 @@ try {
                             fileContents += line + '\n'
                         }
                     }
+                    count++
                 }
 
                 echo "currentBuild.result: ${currentBuild.result}"
