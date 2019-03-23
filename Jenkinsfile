@@ -58,7 +58,7 @@ try {
                 stage("⚖️ Compare Version") {
                     // https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#readfile-read-file-from-workspace
                     String oldContents = readFile fileName
-                    echo $oldContents
+                    echo oldContents
 
                     oldContents.eachLine { line, count ->
                         echo "line $count: $line"
@@ -82,11 +82,6 @@ try {
                         else {
                             fileContents += line + '\n'
                         }
-                    }
-
-                    if (status != 0) {
-                        echo "Aborting build. 😞"
-                        currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
                     }
                 }
 
