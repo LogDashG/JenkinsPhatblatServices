@@ -50,7 +50,7 @@ try {
                     if (newVersion == null || fileHash == null) {
                         String message = "Required parameters are missing"
                         echo message
-                        currentBuild.build = "FAILURE"
+                        currentBuild.rawBuild.@result = hudson.model.Result.FAILURE
                         throw new Exception(message)
                     }
                 }
@@ -74,7 +74,7 @@ try {
                             if (line.contains(newVersion)) {
                                 String message = "Version $newVersion is already in formula."
                                 echo message
-                                currentBuild.build = "ABORTED"
+                                currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
                                 throw new AbortException(message)
                             }
 
