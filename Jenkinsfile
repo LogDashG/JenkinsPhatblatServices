@@ -19,12 +19,12 @@ properties([
     parameters([
         string(
             name: 'newVersion',
-            defaultValue: null,
+            defaultValue: '2.168',
             description: 'New version of Jenkins.'
         ),
         string(
             name: 'fileHash',
-            defaultValue: null,
+            defaultValue: '83756847b09e754829aaf343d2f11a8c84b097e922d1770dc53b8c8267184e62',
             description: 'SHA-256 hash of war file.'
         ),
     ]),
