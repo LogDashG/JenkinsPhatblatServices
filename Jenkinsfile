@@ -58,8 +58,10 @@ try {
                 stage("⚖️ Compare Version") {
                     // https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#readfile-read-file-from-workspace
                     String oldContents = readFile fileName
+                    echo $oldContents
+
                     oldContents.eachLine { line, count ->
-                        println "line $count: $line"
+                        echo "line $count: $line"
 
                         // Version in url
                         if (line.startsWith("  url")) {
