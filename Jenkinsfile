@@ -6,7 +6,6 @@
  * Updates pbjenkins formula in phatblat/homebrew-services.
  */
 
-import hudson.AbortException
 import jenkins.model.*
 
 def MAIL_TO = JenkinsLocationConfiguration.get().getAdminAddress()
@@ -75,7 +74,7 @@ try {
                                 String message = "Version $newVersion is already in formula."
                                 echo message
                                 currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
-                                throw new AbortException(message)
+                                throw new Exception(message)
                             }
 
                             fileContents += "  url \"http://mirrors.jenkins.io/war/$newVersion/jenkins.war\"\n"
