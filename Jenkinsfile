@@ -6,10 +6,10 @@
  * Updates pbjenkins formula in phatblat/homebrew-services.
  */
 
-import jenkins.model.*
+import hudson.model.Result
 
-def MAIL_TO = JenkinsLocationConfiguration.get().getAdminAddress()
-echo "MAIL_TO: $MAIL_TO"
+String MAIL_TO = JenkinsLocationConfiguration.get().getAdminAddress()
+echo("MAIL_TO: $MAIL_TO")
 
 properties([
     buildDiscarder(logRotator(numToKeepStr: '100')),
@@ -43,28 +43,32 @@ try {
         withEnv(['LANG=en_US.UTF-8']) {
             node {
                 stage("✔️ Parameters") {
-                    echo "newVersion: $newVersion"
-                    echo "fileHash: $fileHash"
+                    echo("newVersion: $newVersion")
+                    echo("fileHash: $fileHash")
 
                     if (newVersion == null || fileHash == null) {
                         String message = "Required parameters are missing"
-                        echo message
-                        currentBuild.rawBuild.@result = hudson.model.Result.FAILURE
+                        echo(message)
+                        currentBuild.rawBuild.@result = Result.FAILURE
                         throw new Exception(message)
                     }
                 }
                 stage("🛒 Checkout") {
-                    git url: "git@github.com:phatblat/homebrew-services.git"
+                    git(url: "git@github.com:phatblat/homebrew-services.git")
                 }
                 stage("⚖️ Compare Version") {
                     // https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#readfile-read-file-from-workspace
-                    String oldContents = readFile fileName
+                    String oldContents = readFile(fileName)
                     echo oldContents
 
                     def lines = oldContents.split('\n')
 
                     lines.eachWithIndex { line, index ->
-                        echo "line $index: $line"
+                        if (currentBuild.result && currentBuild.result != 'SUCCESS') {
+                            return
+                        }
+
+                        echo("line $index: $line")
 
                         // Version in url
                         if (line.startsWith("  url")) {
@@ -73,8 +77,8 @@ try {
                             if (line.contains(newVersion)) {
                                 String message = "Version $newVersion is already in formula."
                                 echo message
-                                currentBuild.rawBuild.@result = hudson.model.Result.ABORTED
-                                throw new Exception(message)
+                                currentBuild.rawBuild.@result = Result.ABORTED
+                                return
                             }
 
                             fileContents += "  url \"http://mirrors.jenkins.io/war/$newVersion/jenkins.war\"\n"
@@ -96,8 +100,8 @@ try {
 
                 stage("🍼 Update Formula") {
                     // https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/#writefile-write-file-to-workspace
-                    writeFile file: fileName, text: fileContents
-                    archiveArtifacts fileName
+                    writeFile(file: fileName, text: fileContents)
+                    archiveArtifacts(fileName)
                 }
             }
         }
@@ -118,8 +122,11 @@ catch (Exception ex) {
                 |${env.BUILD_URL}console
                 |""".stripMargin()
 
-    mail to: MAIL_TO,
-         subject: subject,
-         body: body
+    mail(
+        to: MAIL_TO,
+        subject: subject,
+        body: body
+    )
+
     throw ex
 }
